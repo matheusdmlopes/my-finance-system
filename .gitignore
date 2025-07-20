@@ -1,0 +1,13 @@
+# SQLite Database
+/database/finance.sqlite
+
+# Environment files
+.env
+.env.example
+
+# IDE and editor directories
+.vscode/
+.idea/
+
+# macOS files
+.DS_Store
