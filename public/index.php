@@ -14,6 +14,40 @@ require_once __DIR__ . '/../database.php';
     <div class="container">
         <h1>Meu Painel Financeiro</h1>
 
+        <?php
+        // Exibir mensagens de feedback do import
+        if (isset($_GET['imported'])) {
+            $imported = (int)$_GET['imported'];
+            $errors = (int)($_GET['errors'] ?? 0);
+            echo "<div class='import-feedback success'>";
+            echo "✅ $imported transações importadas com sucesso!";
+            if ($errors > 0) {
+                echo " ($errors linhas com erro foram ignoradas)";
+            }
+            echo "</div>";
+        } elseif (isset($_GET['error'])) {
+            $error = $_GET['error'];
+            echo "<div class='import-feedback error'>";
+            switch ($error) {
+                case 'upload':
+                    echo "❌ Erro no upload do arquivo.";
+                    break;
+                case 'file':
+                    echo "❌ Não foi possível ler o arquivo.";
+                    break;
+                case 'format':
+                    echo "❌ Formato do CSV inválido.";
+                    break;
+                case 'unknown_format':
+                    echo "❌ Formato do CSV não reconhecido. Verifique se é um arquivo de cartão ou extrato válido.";
+                    break;
+                default:
+                    echo "❌ Erro desconhecido na importação.";
+            }
+            echo "</div>";
+        }
+        ?>
+
         <hr>
 
         <h2>Adicionar Nova Transação</h2>
@@ -38,6 +72,17 @@ require_once __DIR__ . '/../database.php';
                 <input type="date" id="date" name="date">
             </div>
             <button type="submit">Adicionar</button>
+        </form>
+
+        <hr>
+
+        <h2>Importar Transações via CSV</h2>
+        <form action="import_csv.php" method="POST" enctype="multipart/form-data">
+            <div>
+                <label for="csv_file">Arquivo CSV (Cartão ou Extrato):</label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            </div>
+            <button type="submit">Importar CSV</button>
         </form>
 
         <hr>
