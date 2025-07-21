@@ -11,3 +11,7 @@
 
 # macOS files
 .DS_Store
+
+# AI docs
+
+GEMINI.md
