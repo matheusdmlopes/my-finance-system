@@ -31,20 +31,51 @@ require_once __DIR__ . '/../database.php';
                 <option value="expense">Saída</option>
             </select>
         </div>
+        <div>
+            <label for="date">Data (opcional):</label>
+            <input type="date" id="date" name="date">
+        </div>
         <button type="submit">Adicionar</button>
     </form>
 
     <hr>
 
-    <h2>Suas Transações</h2>
+    <?php
+    // --- Lógica de Seleção de Mês ---
+    $currentMonth = $_GET['month'] ?? date('Y-m');
+    $currentDate = new DateTime($currentMonth . '-01');
+    $monthName = $currentDate->format('F'); // Nome do mês em inglês
+    $year = $currentDate->format('Y');
+
+    // Tradução manual simples para o nome do mês
+    $monthTranslations = [
+        'January' => 'Janeiro', 'February' => 'Fevereiro', 'March' => 'Março',
+        'April' => 'Abril', 'May' => 'Maio', 'June' => 'Junho',
+        'July' => 'Julho', 'August' => 'Agosto', 'September' => 'Setembro',
+        'October' => 'Outubro', 'November' => 'Novembro', 'December' => 'Dezembro'
+    ];
+    $monthNamePortuguese = $monthTranslations[$monthName];
+
+    // --- Navegação entre meses ---
+    $prevMonth = (clone $currentDate)->modify('-1 month')->format('Y-m');
+    $nextMonth = (clone $currentDate)->modify('+1 month')->format('Y-m');
+    ?>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+        <a href="?month=<?= $prevMonth ?>">&lt; Mês Anterior</a>
+        <h2>Transações de <?= $monthNamePortuguese ?> de <?= $year ?></h2>
+        <a href="?month=<?= $nextMonth ?>">Mês Seguinte &gt;</a>
+    </div>
 
     <?php
-    // Busca todas as transações
-    $stmt = $pdo->prepare("SELECT type, description, amount, date FROM transactions ORDER BY date DESC");
-    $stmt->execute();
+    // --- Busca e Cálculo das Transações do Mês ---
+    $stmt = $pdo->prepare(
+        "SELECT id, type, description, amount, date FROM transactions WHERE strftime('%Y-%m', date) = ? ORDER BY date DESC"
+    );
+    $stmt->execute([$currentMonth]);
     $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Calcula o saldo
+    // Calcula o saldo do mês
     $balance = 0;
     foreach ($transactions as $transaction) {
         if ($transaction['type'] === 'income') {
@@ -55,7 +86,7 @@ require_once __DIR__ . '/../database.php';
     }
     ?>
 
-    <h3>Saldo Atual: R$ <?= number_format($balance, 2, ',', '.') ?></h3>
+    <h3>Saldo do Mês: <span style="color: <?= $balance >= 0 ? 'green' : 'red' ?>;">R$ <?= number_format($balance, 2, ',', '.') ?></span></h3>
 
     <table border="1" style="width:100%; border-collapse: collapse;">
         <thead>
