@@ -88,8 +88,13 @@ require_once __DIR__ . '/../database.php';
         <hr>
 
         <?php
-        // --- Lógica de Seleção de Mês ---
+        // --- Parâmetros de URL ---
         $currentMonth = $_GET['month'] ?? date('Y-m');
+        $sortBy = $_GET['sort'] ?? 'date';
+        $sortOrder = $_GET['order'] ?? 'DESC';
+        $filterType = $_GET['filter'] ?? 'all';
+        
+        // --- Lógica de Seleção de Mês ---
         $currentDate = new DateTime($currentMonth . '-01');
         $monthName = $currentDate->format('F'); // Nome do mês em inglês
         $year = $currentDate->format('Y');
@@ -109,17 +114,47 @@ require_once __DIR__ . '/../database.php';
         ?>
 
         <div class="month-navigation">
-            <a href="?month=<?= $prevMonth ?>">&lt; Mês Anterior</a>
+            <a href="?month=<?= $prevMonth ?>&sort=<?= $sortBy ?>&order=<?= $sortOrder ?>&filter=<?= $filterType ?>">&lt; Mês Anterior</a>
             <h2><?= $monthNamePortuguese ?> de <?= $year ?></h2>
-            <a href="?month=<?= $nextMonth ?>">Mês Seguinte &gt;</a>
+            <a href="?month=<?= $nextMonth ?>&sort=<?= $sortBy ?>&order=<?= $sortOrder ?>&filter=<?= $filterType ?>">Mês Seguinte &gt;</a>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <label for="type-filter">Filtrar por tipo:</label>
+            <select id="type-filter" onchange="updateFilter()">
+                <option value="all" <?= $filterType === 'all' ? 'selected' : '' ?>>Todos</option>
+                <option value="income" <?= $filterType === 'income' ? 'selected' : '' ?>>Apenas Entradas</option>
+                <option value="expense" <?= $filterType === 'expense' ? 'selected' : '' ?>>Apenas Saídas</option>
+            </select>
         </div>
 
         <?php
         // --- Busca e Cálculo das Transações do Mês ---
-        $stmt = $pdo->prepare(
-            "SELECT id, type, description, amount, date FROM transactions WHERE strftime('%Y-%m', date) = ? ORDER BY date DESC"
-        );
-        $stmt->execute([$currentMonth]);
+        
+        // Construir query com filtros e ordenação
+        $whereClause = "strftime('%Y-%m', date) = ?";
+        $params = [$currentMonth];
+        
+        if ($filterType !== 'all') {
+            $whereClause .= " AND type = ?";
+            $params[] = $filterType;
+        }
+        
+        // Mapear colunas de ordenação
+        $validSortColumns = [
+            'description' => 'description',
+            'amount' => 'amount', 
+            'type' => 'type',
+            'date' => 'date'
+        ];
+        
+        $sortColumn = isset($validSortColumns[$sortBy]) ? $validSortColumns[$sortBy] : 'date';
+        $order = ($sortOrder === 'ASC') ? 'ASC' : 'DESC';
+        
+        $query = "SELECT id, type, description, amount, date FROM transactions WHERE $whereClause ORDER BY $sortColumn $order";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
         $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Calcula o saldo do mês
@@ -138,10 +173,21 @@ require_once __DIR__ . '/../database.php';
         <table class="transactions-table">
             <thead>
                 <tr>
-                    <th>Descrição</th>
-                    <th>Valor (R$)</th>
-                    <th>Tipo</th>
-                    <th>Data</th>
+                    <?php
+                    // Função para gerar links de ordenação
+                    function getSortLink($column, $currentSort, $currentOrder, $currentMonth, $filterType) {
+                        $newOrder = ($currentSort === $column && $currentOrder === 'DESC') ? 'ASC' : 'DESC';
+                        $arrow = '';
+                        if ($currentSort === $column) {
+                            $arrow = $currentOrder === 'DESC' ? ' ↓' : ' ↑';
+                        }
+                        return "?month=$currentMonth&sort=$column&order=$newOrder&filter=$filterType";
+                    }
+                    ?>
+                    <th><a href="<?= getSortLink('description', $sortBy, $sortOrder, $currentMonth, $filterType) ?>">Descrição<?= $sortBy === 'description' ? ($sortOrder === 'DESC' ? ' ↓' : ' ↑') : '' ?></a></th>
+                    <th><a href="<?= getSortLink('amount', $sortBy, $sortOrder, $currentMonth, $filterType) ?>">Valor (R$)<?= $sortBy === 'amount' ? ($sortOrder === 'DESC' ? ' ↓' : ' ↑') : '' ?></a></th>
+                    <th><a href="<?= getSortLink('type', $sortBy, $sortOrder, $currentMonth, $filterType) ?>">Tipo<?= $sortBy === 'type' ? ($sortOrder === 'DESC' ? ' ↓' : ' ↑') : '' ?></a></th>
+                    <th><a href="<?= getSortLink('date', $sortBy, $sortOrder, $currentMonth, $filterType) ?>">Data<?= $sortBy === 'date' ? ($sortOrder === 'DESC' ? ' ↓' : ' ↑') : '' ?></a></th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -169,5 +215,16 @@ require_once __DIR__ . '/../database.php';
             </tbody>
         </table>
     </div>
+
+    <script>
+    function updateFilter() {
+        const filter = document.getElementById('type-filter').value;
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filter', filter);
+        urlParams.delete('sort');
+        urlParams.delete('order');
+        window.location.search = urlParams.toString();
+    }
+    </script>
 </body>
 </html>
