@@ -95,12 +95,13 @@ require_once __DIR__ . '/../database.php';
                 <th style="padding: 8px;">Valor (R$)</th>
                 <th style="padding: 8px;">Tipo</th>
                 <th style="padding: 8px;">Data</th>
+                <th style="padding: 8px;">Ações</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($transactions)): ?>
                 <tr>
-                    <td colspan="4" style="text-align:center; padding: 8px;">Nenhuma transação encontrada.</td>
+                    <td colspan="5" style="text-align:center; padding: 8px;">Nenhuma transação encontrada.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($transactions as $transaction): ?>
@@ -111,6 +112,10 @@ require_once __DIR__ . '/../database.php';
                         </td>
                         <td style="padding: 8px;"><?= $transaction['type'] === 'income' ? 'Entrada' : 'Saída' ?></td>
                         <td style="padding: 8px;"><?= date('d/m/Y', strtotime($transaction['date'])) ?></td>
+                        <td style="padding: 8px;">
+                            <a href="edit_transaction.php?id=<?= $transaction['id'] ?>">Editar</a>
+                            <a href="delete_transaction.php?id=<?= $transaction['id'] ?>" onclick="return confirm('Tem certeza que deseja excluir esta transação?');">Excluir</a>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
