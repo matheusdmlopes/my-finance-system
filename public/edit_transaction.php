@@ -47,33 +47,37 @@ if (!$transaction) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Transação</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <h1>Editar Transação</h1>
+    <div class="container">
+        <h1>Editar Transação</h1>
 
-    <form method="POST">
-        <div>
-            <label for="description">Descrição:</label>
-            <input type="text" id="description" name="description" value="<?= htmlspecialchars($transaction['description']) ?>" required>
-        </div>
-        <div>
-            <label for="amount">Valor:</label>
-            <input type="number" step="0.01" id="amount" name="amount" value="<?= $transaction['amount'] ?>" required>
-        </div>
-        <div>
-            <label for="type">Tipo:</label>
-            <select id="type" name="type" required>
-                <option value="income" <?= $transaction['type'] === 'income' ? 'selected' : '' ?>>Entrada</option>
-                <option value="expense" <?= $transaction['type'] === 'expense' ? 'selected' : '' ?>>Saída</option>
-            </select>
-        </div>
-        <div>
-            <label for="date">Data:</label>
-            <input type="date" id="date" name="date" value="<?= date('Y-m-d', strtotime($transaction['date'])) ?>" required>
-        </div>
-        <button type="submit">Salvar Alterações</button>
-        <a href="index.php?month=<?= date('Y-m', strtotime($transaction['date'])) ?>">Cancelar</a>
-    </form>
+        <hr>
 
+        <form method="POST">
+            <div>
+                <label for="description">Descrição:</label>
+                <input type="text" id="description" name="description" value="<?= htmlspecialchars($transaction['description']) ?>" required>
+            </div>
+            <div>
+                <label for="amount">Valor:</label>
+                <input type="number" step="0.01" id="amount" name="amount" value="<?= $transaction['amount'] ?>" required>
+            </div>
+            <div>
+                <label for="type">Tipo:</label>
+                <select id="type" name="type" required>
+                    <option value="income" <?= $transaction['type'] === 'income' ? 'selected' : '' ?>>Entrada</option>
+                    <option value="expense" <?= $transaction['type'] === 'expense' ? 'selected' : '' ?>>Saída</option>
+                </select>
+            </div>
+            <div>
+                <label for="date">Data:</label>
+                <input type="date" id="date" name="date" value="<?= date('Y-m-d', strtotime($transaction['date'])) ?>" required>
+            </div>
+            <button type="submit">Salvar Alterações</button>
+            <a href="index.php?month=<?= date('Y-m', strtotime($transaction['date'])) ?>" style="margin-left: 10px;">Cancelar</a>
+        </form>
+    </div>
 </body>
 </html>
